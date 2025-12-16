@@ -2,13 +2,18 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { mockData, type Contribution } from '@/lib/mockData';
 import IslamicPattern from '@/components/ui/IslamicPattern';
 import ContributionStats from '@/components/contributions/ContributionStats';
 import ContributionChart from '@/components/contributions/ContributionChart';
 import ContributionFilters from '@/components/contributions/ContributionFilters';
 import ContributionTable from '@/components/contributions/ContributionTable';
 import LandDonorCard from '@/components/contributions/LandDonorCard';
+import { 
+  api, 
+  Contribution, 
+  LandDonor, 
+  ContributionStats as ContributionStatsType,
+} from '@/lib/api';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -19,16 +24,37 @@ export default function ContributionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Data states
+  const [contributions, setContributions] = useState<Contribution[]>([]);
+  const [landDonors, setLandDonors] = useState<LandDonor[]>([]);
+  const [stats, setStats] = useState<ContributionStatsType | null>(null);
 
-  // Simulate initial loading
+  // Fetch data on mount
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
+    const fetchData = async () => {
+      try {
+        const [contributionsRes, landDonorsData, statsData] = await Promise.all([
+          api.getContributions({ limit: 1000 }),
+          api.getAllLandDonors(),
+          api.getContributionStats(),
+        ]);
+        setContributions(contributionsRes.data);
+        setLandDonors(landDonorsData);
+        setStats(statsData);
+      } catch (error) {
+        console.error('Failed to fetch contributions data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   // Filter contributions
   const filteredContributions = useMemo(() => {
-    return mockData.contributions.filter((contribution) => {
+    return contributions.filter((contribution) => {
       // Date filter
       const contributionDate = new Date(contribution.date);
       const fromDate = new Date(dateFrom);
@@ -56,7 +82,7 @@ export default function ContributionsPage() {
 
       return true;
     });
-  }, [dateFrom, dateTo, type, searchQuery]);
+  }, [contributions, dateFrom, dateTo, type, searchQuery]);
 
   // Sort by date (newest first)
   const sortedContributions = useMemo(() => {
@@ -88,27 +114,44 @@ export default function ContributionsPage() {
     }, 300);
   }, []);
 
-  // Calculate totals
+  // Calculate totals from API stats
   const totalStats = useMemo(() => {
-    const totalFunds = mockData.contributions.reduce((acc, curr) => acc + curr.amount, 0);
-    const landDecimal = mockData.landDonors.reduce((acc, curr) => {
-      const decimals = parseInt(curr.landAmount.split(' ')[0]) || 0;
-      return acc + decimals;
-    }, 0);
-    const totalContributors = new Set(
-      mockData.contributions
-        .filter((c) => !c.anonymous)
-        .map((c) => c.contributorName)
-    ).size;
-
+    if (!stats) {
+      return { totalFunds: 0, landDonated: 0, totalContributors: 0 };
+    }
     return {
-      totalFunds,
-      landDonated: landDecimal,
-      totalContributors: totalContributors + mockData.contributions.filter((c) => c.anonymous).length,
+      totalFunds: stats.totalAmount,
+      landDonated: stats.totalLand,
+      totalContributors: stats.totalContributors,
     };
-  }, []);
+  }, [stats]);
 
   const hasMore = displayCount < sortedContributions.length;
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
+        <div className="relative bg-gradient-to-br from-primary-900 via-primary-800 to-stone-950 text-white pt-24 sm:pt-28 pb-12 sm:pb-16">
+          <div className="container mx-auto px-4 text-center">
+            <div className="animate-pulse">
+              <div className="h-12 w-72 bg-white/20 rounded mx-auto mb-6"></div>
+              <div className="h-6 w-96 bg-white/10 rounded mx-auto"></div>
+            </div>
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-16">
+          <div className="animate-pulse space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-gray-100 rounded-xl h-32"></div>
+              ))}
+            </div>
+            <div className="bg-gray-100 rounded-xl h-64"></div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 overflow-x-hidden">
@@ -165,14 +208,14 @@ export default function ContributionsPage() {
         </motion.div>
 
         <ContributionChart
-          yearlyData={mockData.yearlyContributions}
-          typeBreakdown={mockData.typeBreakdown}
+          yearlyData={stats?.yearlyContributions || []}
+          typeBreakdown={stats?.typeBreakdown || []}
         />
       </div>
 
       {/* Land Donors Section */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 bg-gradient-to-b from-primary-50/50 to-transparent">
-        <LandDonorCard donors={mockData.landDonors} />
+        <LandDonorCard donors={landDonors} />
       </div>
 
       {/* Contributions Table Section */}
@@ -204,7 +247,7 @@ export default function ContributionsPage() {
             onSearchChange={setSearchQuery}
             onReset={handleReset}
             filteredCount={sortedContributions.length}
-            totalCount={mockData.contributions.length}
+            totalCount={contributions.length}
           />
         </div>
 

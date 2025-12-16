@@ -1,11 +1,12 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { mockData } from '@/lib/mockData';
+import { useState, useEffect } from 'react';
+import { api, SiteSettings } from '@/lib/api';
 import IslamicPattern from '../ui/IslamicPattern';
 
 export default function ContactSection() {
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,6 +18,18 @@ export default function ContactSection() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await api.getSettings();
+        setSettings(data);
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -60,8 +73,8 @@ export default function ContactSection() {
         </svg>
       ),
       label: 'Email',
-      value: mockData.contactInfo.email,
-      href: `mailto:${mockData.contactInfo.email}`,
+      value: settings?.email || 'contact@amanat.org',
+      href: `mailto:${settings?.email || 'contact@amanat.org'}`,
     },
     {
       icon: (
@@ -75,8 +88,8 @@ export default function ContactSection() {
         </svg>
       ),
       label: 'Phone',
-      value: mockData.contactInfo.phone,
-      href: `tel:${mockData.contactInfo.phone}`,
+      value: settings?.phone || '+880 1XXX-XXXXXX',
+      href: `tel:${settings?.phone || '+8801XXX-XXXXXX'}`,
     },
     {
       icon: (
@@ -96,7 +109,7 @@ export default function ContactSection() {
         </svg>
       ),
       label: 'Address',
-      value: mockData.contactInfo.address,
+      value: settings?.address || 'Nazirpara, Bangladesh',
       href: '#',
     },
   ];

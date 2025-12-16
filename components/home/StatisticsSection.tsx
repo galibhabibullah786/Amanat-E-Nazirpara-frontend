@@ -1,14 +1,41 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { mockData } from '@/lib/mockData';
+import { api, Statistics } from '@/lib/api';
 
 export default function StatisticsSection() {
+  const [statistics, setStatistics] = useState<Statistics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const data = await api.getStatistics();
+        setStatistics(data);
+      } catch (error) {
+        console.error('Failed to fetch statistics:', error);
+        // Fallback values if API fails
+        setStatistics({
+          totalContributions: 0,
+          totalAmount: 0,
+          totalLandDonors: 0,
+          totalLand: 0,
+          committeeMembers: 0,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStatistics();
+  }, []);
+
   const stats = [
     {
       id: 1,
       label: 'Total Funds Raised',
-      value: `৳${(mockData.statistics.totalFunds / 100000).toFixed(1)}L`,
+      value: loading ? '...' : `৳${((statistics?.totalAmount || 0) / 100000).toFixed(1)}L`,
       description: 'Community contributions',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,7 +52,7 @@ export default function StatisticsSection() {
     {
       id: 2,
       label: 'Land Donated',
-      value: `${mockData.statistics.landDonated}`,
+      value: loading ? '...' : `${statistics?.totalLand || 0}`,
       description: 'Decimal of land',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +69,7 @@ export default function StatisticsSection() {
     {
       id: 3,
       label: 'Total Contributors',
-      value: `${mockData.statistics.totalContributors}+`,
+      value: loading ? '...' : `${statistics?.totalContributions || 0}+`,
       description: 'Community members',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">

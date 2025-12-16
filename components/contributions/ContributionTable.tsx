@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import type { Contribution } from '@/lib/mockData';
+import type { Contribution } from '@/lib/api';
 
 interface ContributionTableProps {
   contributions: Contribution[];

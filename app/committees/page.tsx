@@ -1,18 +1,57 @@
  'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { mockData, type CommitteeMember } from '@/lib/mockData';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CommitteeCard from '@/components/committees/CommitteeCard';
 import TimelineNode from '@/components/committees/TimelineNode';
 import ProfileModal from '@/components/committees/ProfileModal';
 import IslamicPattern from '@/components/ui/IslamicPattern';
+import { api, Committee, CommitteeMember } from '@/lib/api';
 
 export default function CommitteesPage() {
   const [selectedMember, setSelectedMember] = useState<CommitteeMember | null>(null);
+  const [committees, setCommittees] = useState<Committee[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCommittees = async () => {
+      try {
+        const data = await api.getAllCommittees();
+        setCommittees(data);
+      } catch (error) {
+        console.error('Failed to fetch committees:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommittees();
+  }, []);
 
   // Sort committees in descending order (most recent first)
-  const sortedCommittees = [...mockData.committees].sort((a, b) => b.id - a.id);
+  const sortedCommittees = [...committees].sort((a, b) => b.id - a.id);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
+        <div className="relative inset-0 bg-gradient-to-br from-primary-900 via-primary-800 to-stone-950 text-white pt-24 sm:pt-28 md:pb-13 pb-10">
+          <div className="container mx-auto px-4 text-center">
+            <div className="animate-pulse">
+              <div className="h-12 w-72 bg-white/20 rounded mx-auto mb-6"></div>
+              <div className="h-6 w-96 bg-white/10 rounded mx-auto"></div>
+            </div>
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-[720px] mx-auto space-y-8">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="animate-pulse bg-gray-100 rounded-2xl h-64"></div>
+            ))}
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 overflow-x-hidden">

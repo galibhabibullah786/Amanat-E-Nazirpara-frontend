@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useRef, useEffect } from 'react';
 import Image from 'next/image';
 import IslamicPattern from '../ui/IslamicPattern';
-import type { CommitteeMember } from '@/lib/mockData';
+import type { CommitteeMember } from '@/lib/api';
 
 interface ProfileModalProps {
   member: CommitteeMember;

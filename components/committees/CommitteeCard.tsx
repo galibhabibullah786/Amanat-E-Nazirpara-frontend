@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import MemberAvatar from './MemberAvatar';
 import IslamicPattern from '../ui/IslamicPattern';
-import type { CommitteeMember } from '@/lib/mockData';
+import type { CommitteeMember } from '@/lib/api';
 
 interface CommitteeCardProps {
   committee: any;

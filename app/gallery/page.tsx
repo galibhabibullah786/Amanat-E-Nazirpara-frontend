@@ -2,11 +2,11 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { mockData, type GalleryImage } from '@/lib/mockData';
 import IslamicPattern from '@/components/ui/IslamicPattern';
 import GalleryFilter from '@/components/gallery/GalleryFilter';
 import GalleryGrid from '@/components/gallery/GalleryGrid';
 import GalleryLightbox from '@/components/gallery/GalleryLightbox';
+import { api, GalleryImage } from '@/lib/api';
 
 const IMAGES_PER_PAGE = 8;
 
@@ -15,26 +15,36 @@ export default function GalleryPage() {
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [displayCount, setDisplayCount] = useState(IMAGES_PER_PAGE);
   const [isLoading, setIsLoading] = useState(true);
+  const [allImages, setAllImages] = useState<GalleryImage[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
 
-  // Simulate initial loading
+  // Fetch gallery images
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchGallery = async () => {
+      try {
+        const [imagesRes, catsRes] = await Promise.all([
+          api.getGalleryImages({ limit: 100 }),
+          api.getGalleryCategories(),
+        ]);
+        setAllImages(imagesRes.data);
+        setCategories(catsRes.map((c) => c.category));
+      } catch (error) {
+        console.error('Failed to fetch gallery:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Get unique categories
-  const categories = useMemo(() => {
-    const cats = [...new Set(mockData.galleryImages.map((img) => img.category))];
-    return cats;
+    fetchGallery();
   }, []);
 
   // Filter images based on category
   const filteredImages = useMemo(() => {
     if (activeCategory === 'all') {
-      return mockData.galleryImages;
+      return allImages;
     }
-    return mockData.galleryImages.filter((img) => img.category === activeCategory);
-  }, [activeCategory]);
+    return allImages.filter((img) => img.category === activeCategory);
+  }, [activeCategory, allImages]);
 
   // Get displayed images with pagination
   const displayedImages = useMemo(() => {

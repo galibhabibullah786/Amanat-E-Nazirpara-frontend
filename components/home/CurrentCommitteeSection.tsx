@@ -1,26 +1,9 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { mockData, CommitteeMember } from '@/lib/mockData';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import Image from 'next/image';
-
-// Get the current committee
-const currentCommittee = mockData.committees.find(c => c.type === 'current');
-const members = currentCommittee?.memberDetails || [];
-
-// Sort members by designation importance
-const designationOrder = ['president', 'vice-president', 'secretary', 'treasurer', 'member'];
-const sortedMembers = [...members].sort((a, b) => 
-  designationOrder.indexOf(a.designation) - designationOrder.indexOf(b.designation)
-);
-
-// Get president and other key positions
-const president = sortedMembers.find(m => m.designation === 'president');
-const vicePresident = sortedMembers.find(m => m.designation === 'vice-president');
-const secretary = sortedMembers.find(m => m.designation === 'secretary');
-const treasurer = sortedMembers.find(m => m.designation === 'treasurer');
-const otherMembers = sortedMembers.filter(m => m.designation === 'member');
+import { api, Committee, CommitteeMember } from '@/lib/api';
 
 interface MemberAvatarProps {
   member: CommitteeMember;
@@ -79,15 +62,17 @@ function MemberAvatar({ member, size, onSelect }: MemberAvatarProps) {
       </div>
       
       {/* Actual image */}
-      <Image
-        src={member.photo}
-        alt={member.name}
-        fill
-        className="object-cover"
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.display = 'none';
-        }}
-      />
+      {member.photo && (
+        <Image
+          src={member.photo}
+          alt={member.name}
+          fill
+          className="object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
+        />
+      )}
       
       {/* Hover overlay with "View Profile" text */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 group-active:bg-black/40 transition-colors duration-300 flex items-center justify-center">
@@ -180,15 +165,17 @@ function ProfileCard({ member, onClose }: ProfileCardProps) {
             <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-xl sm:text-2xl">
               {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
             </div>
-            <Image
-              src={member.photo}
-              alt={member.name}
-              fill
-              className="object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
+            {member.photo && (
+              <Image
+                src={member.photo}
+                alt={member.name}
+                fill
+                className="object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -238,6 +225,42 @@ function ProfileCard({ member, onClose }: ProfileCardProps) {
 
 export default function CurrentCommitteeSection() {
   const [selectedMember, setSelectedMember] = useState<{ member: CommitteeMember; element: HTMLButtonElement } | null>(null);
+  const [currentCommittee, setCurrentCommittee] = useState<Committee | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCommittee = async () => {
+      try {
+        const data = await api.getCurrentCommittee();
+        setCurrentCommittee(data);
+      } catch (error) {
+        console.error('Failed to fetch current committee:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommittee();
+  }, []);
+
+  // Derive members from current committee
+  const members = currentCommittee?.members || [];
+
+  // Sort and categorize members
+  const { president, vicePresident, secretary, treasurer, otherMembers } = useMemo(() => {
+    const designationOrder = ['president', 'vice-president', 'secretary', 'treasurer', 'member'];
+    const sortedMembers = [...members].sort((a, b) => 
+      designationOrder.indexOf(a.designation) - designationOrder.indexOf(b.designation)
+    );
+
+    return {
+      president: sortedMembers.find(m => m.designation === 'president'),
+      vicePresident: sortedMembers.find(m => m.designation === 'vice-president'),
+      secretary: sortedMembers.find(m => m.designation === 'secretary'),
+      treasurer: sortedMembers.find(m => m.designation === 'treasurer'),
+      otherMembers: sortedMembers.filter(m => m.designation === 'member'),
+    };
+  }, [members]);
 
   const handleSelectMember = (member: CommitteeMember, element: HTMLButtonElement) => {
     setSelectedMember({ member, element });
@@ -246,6 +269,19 @@ export default function CurrentCommitteeSection() {
   const handleClose = () => {
     setSelectedMember(null);
   };
+
+  if (loading) {
+    return (
+      <section id="committee" className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-white to-gray-50">
+        <div className="container mx-auto px-4 text-center">
+          <div className="animate-pulse">
+            <div className="h-8 w-64 bg-gray-200 rounded mx-auto mb-4"></div>
+            <div className="h-4 w-48 bg-gray-200 rounded mx-auto"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (!currentCommittee || !members.length) {
     return null;

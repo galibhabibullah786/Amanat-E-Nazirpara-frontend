@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import GalleryCard from './GalleryCard';
-import type { GalleryImage } from '@/lib/mockData';
+import type { GalleryImage } from '@/lib/api';
 
 interface GalleryGridProps {
   images: GalleryImage[];

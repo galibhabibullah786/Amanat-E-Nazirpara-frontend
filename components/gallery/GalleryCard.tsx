@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import type { GalleryImage } from '@/lib/mockData';
+import type { GalleryImage } from '@/lib/api';
 
 interface GalleryCardProps {
   image: GalleryImage;

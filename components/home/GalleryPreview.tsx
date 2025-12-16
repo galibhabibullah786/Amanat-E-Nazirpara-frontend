@@ -2,22 +2,30 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { mockData } from '@/lib/mockData';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
-
-interface GalleryImage {
-  id: number;
-  url: string;
-  category: string;
-  alt: string;
-}
+import { api, GalleryImage } from '@/lib/api';
 
 export default function GalleryPreview() {
-  // Get first 6 images for preview
-  const previewImages = mockData.galleryImages.slice(0, 6);
+  const [previewImages, setPreviewImages] = useState<GalleryImage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const data = await api.getFeaturedImages();
+        setPreviewImages(data.slice(0, 6));
+      } catch (error) {
+        console.error('Failed to fetch gallery images:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchImages();
+  }, []);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -73,6 +81,28 @@ export default function GalleryPreview() {
     setCurrentIndex(newIndex);
     setSelectedImage(previewImages[newIndex]);
   };
+
+  if (loading) {
+    return (
+      <section id="gallery" className="py-20 bg-gradient-to-br from-primary-50 to-stone-100">
+        <div className="container mx-auto px-4 text-center">
+          <div className="animate-pulse">
+            <div className="h-8 w-64 bg-gray-200 rounded mx-auto mb-4"></div>
+            <div className="h-4 w-48 bg-gray-200 rounded mx-auto mb-8"></div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className={`bg-gray-200 rounded-xl ${i === 0 ? 'col-span-2 row-span-2 h-96' : 'h-48'}`}></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (previewImages.length === 0) {
+    return null;
+  }
 
   return (
     <section id="gallery" className="py-20 bg-gradient-to-br from-primary-50 to-stone-100">

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useState } from 'react';
-import type { CommitteeMember } from '@/lib/mockData';
+import type { CommitteeMember } from '@/lib/api';
 
 interface MemberAvatarProps {
   member: CommitteeMember;
