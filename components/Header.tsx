@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('hero');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,16 +20,63 @@ export default function Header() {
   }, []);
 
   const navItems = [
-    { name: 'Home', href: '/' },
-    { name: 'Contributions', href: '/contributions' },
-    { name: 'Gallery', href: '/gallery' },
-    { name: 'Committees', href: '/committees' },
+    { name: 'Home', href: '/', sectionId: 'hero' },
+    { name: 'Contributions', href: '/contributions', sectionId: 'statistics' },
+    { name: 'Committees', href: '/committees', sectionId: 'committee' },
+    { name: 'Gallery', href: '/gallery', sectionId: 'gallery' },
   ];
 
   const pathname = usePathname();
+  const isHomePage = pathname === '/';
 
-  // Active nav is determined only by pathname (no scroll-based active)
-  const activeNavName = undefined;
+  // Handle navigation - smooth scroll on home page, regular navigation on other pages
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, item: typeof navItems[0]) => {
+    if (isHomePage && item.sectionId) {
+      e.preventDefault();
+      const section = document.getElementById(item.sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setMobileMenuOpen(false);
+      }
+    } else if (!isHomePage && item.href === '/' && item.sectionId) {
+      // If not on home page and clicking home sections, navigate to home
+      return;
+    }
+  };
+
+  // Intersection observer for tracking active section on home page
+  useEffect(() => {
+    if (!isHomePage) return;
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -60% 0px',
+      threshold: 0,
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    // Observe all sections
+    const sections = ['hero', 'statistics', 'committee', 'gallery', 'contact'];
+    sections.forEach((sectionId) => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isHomePage]);
 
   // Lock body scroll while mobile drawer is open
   useEffect(() => {
@@ -69,11 +117,14 @@ export default function Header() {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-6">
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = isHomePage 
+                ? activeSection === item.sectionId 
+                : pathname === item.href;
               return (
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={(e) => handleNavClick(e, item)}
                   className={`font-medium transition-colors relative group ${
                     scrolled ? 'text-gray-700 hover:text-primary-700' : 'text-white hover:text-primary-300'
                   } ${isActive ? (scrolled ? 'text-primary-700' : 'text-primary-300') : ''}`}
@@ -87,6 +138,15 @@ export default function Header() {
             })}
             <Link
               href="/#contact"
+              onClick={(e) => {
+                if (isHomePage) {
+                  e.preventDefault();
+                  const section = document.getElementById('contact');
+                  if (section) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }
+              }}
               className="px-5 py-2 bg-primary-700 text-white rounded-full font-medium hover:bg-primary-800 transition-all hover:shadow-lg hover:scale-105"
             >
               Contribute Now
@@ -175,12 +235,14 @@ export default function Header() {
                 <nav className="flex-1 overflow-auto py-6">
                   <div className="px-4 space-y-1">
                     {navItems.map((item) => {
-                      const isActive = pathname === item.href;
+                      const isActive = isHomePage 
+                        ? activeSection === item.sectionId 
+                        : pathname === item.href;
                       return (
                         <Link
                           key={item.name}
                           href={item.href}
-                          onClick={() => setMobileMenuOpen(false)}
+                          onClick={(e) => handleNavClick(e, item)}
                           className={`block px-4 py-3 rounded-lg transition-colors font-medium text-gray-800 hover:bg-primary-50 hover:text-primary-700 relative group ${isActive ? 'bg-primary-100 text-primary-700' : ''}`}
                         >
                           {item.name}
@@ -195,7 +257,16 @@ export default function Header() {
                   <div className="px-4 mt-6">
                     <Link
                       href="/#contact"
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={(e) => {
+                        if (isHomePage) {
+                          e.preventDefault();
+                          const section = document.getElementById('contact');
+                          if (section) {
+                            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }
+                        setMobileMenuOpen(false);
+                      }}
                       className="block w-full text-center px-4 py-3 bg-primary-700 text-white rounded-full font-semibold hover:bg-primary-800 transition-colors"
                     >
                       Contribute Now
