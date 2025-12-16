@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { mockData } from '@/lib/mockData';
+import IslamicPattern from '../ui/IslamicPattern';
 
 export default function ContactSection() {
   const [formData, setFormData] = useState({
@@ -127,12 +128,7 @@ export default function ContactSection() {
             transition={{ duration: 0.6 }}
           >
             <div className="relative bg-gradient-to-br from-primary-700 to-primary-900 rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 text-white h-full overflow-hidden">
-              {/* Islamic Geometric Pattern */}
-              <div className="absolute inset-0 opacity-15" style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5'%3E%3Cpath d='M50 10 L90 50 L50 90 L10 50 Z'/%3E%3Cpath d='M50 25 L75 50 L50 75 L25 50 Z'/%3E%3Ccircle cx='50' cy='50' r='15'/%3E%3Cpath d='M50 0 L60 20 L50 40 L40 20 Z'/%3E%3Cpath d='M50 60 L60 80 L50 100 L40 80 Z'/%3E%3Cpath d='M0 50 L20 60 L40 50 L20 40 Z'/%3E%3Cpath d='M60 50 L80 60 L100 50 L80 40 Z'/%3E%3C/g%3E%3C/svg%3E")`,
-                backgroundSize: '100px 100px',
-                backgroundAttachment: 'fixed',
-              }} />
+              <IslamicPattern variant="complex" fixed />
               <h3 className="relative z-10 text-lg sm:text-xl font-bold mb-4 sm:mb-6">Get In Touch</h3>
               <p className="relative z-10 mb-6 sm:mb-8 text-sm sm:text-base text-primary-50">
                 We welcome all forms of contributions - cash, land, materials, or volunteer work.

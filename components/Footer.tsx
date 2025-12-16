@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import MosqueSilhouette from './MosqueSilhouette';
 import { useRef, useEffect, useState } from 'react';
+import MosqueSilhouette from './ui/MosqueSilhouette';
+import IslamicPattern from './ui/IslamicPattern';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -49,12 +50,7 @@ export default function Footer() {
 
   return (
     <footer ref={footerRef} className="relative bg-gradient-to-br from-stone-900 via-stone-800 to-primary-900 text-white overflow-hidden">
-      {/* Islamic Geometric Pattern */}
-      <div className="absolute inset-0 opacity-15" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5'%3E%3Cpath d='M50 10 L90 50 L50 90 L10 50 Z'/%3E%3Cpath d='M50 25 L75 50 L50 75 L25 50 Z'/%3E%3Ccircle cx='50' cy='50' r='15'/%3E%3Cpath d='M50 0 L60 20 L50 40 L40 20 Z'/%3E%3Cpath d='M50 60 L60 80 L50 100 L40 80 Z'/%3E%3Cpath d='M0 50 L20 60 L40 50 L20 40 Z'/%3E%3Cpath d='M60 50 L80 60 L100 50 L80 40 Z'/%3E%3C/g%3E%3C/svg%3E")`,
-        backgroundSize: '100px 100px',
-        backgroundAttachment: 'fixed',
-      }} />
+      <IslamicPattern variant="complex" fixed />
 
       {/* Fixed Mosque Silhouette - Clipped to footer bounds */}
       <div 

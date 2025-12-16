@@ -1,8 +1,8 @@
-import HeroSection from "@/components/HeroSection";
-import StatisticsSection from "@/components/StatisticsSection";
-import CurrentCommitteeSection from "@/components/CurrentCommitteeSection";
-import GalleryPreview from "@/components/GalleryPreview";
-import ContactSection from "@/components/ContactSection";
+import HeroSection from "@/components/home/HeroSection";
+import StatisticsSection from "@/components/home/StatisticsSection";
+import CurrentCommitteeSection from "@/components/home/CurrentCommitteeSection";
+import GalleryPreview from "@/components/home/GalleryPreview";
+import ContactSection from "@/components/home/ContactSection";
 
 export default function Home() {
   return (
